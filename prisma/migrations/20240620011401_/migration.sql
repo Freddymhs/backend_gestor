@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "supabaseId" SET DATA TYPE TEXT;

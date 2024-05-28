@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// User model represents a user in the system
+model User {
+  id         Int     @id @default(autoincrement())
+  enabled    Boolean @default(true)
+  supabaseId String?
+  name       String
+  email      String  @unique
+  role       Role    @default(WORKER)
+
+  /// Profile associated with the user (one-to-one relationship)
+  profile Profile?
+
+  /// Sales made by the user (one-to-many relationship)
+  sales Sale[]
+
+  /// Permissions assigned to the user (many-to-many relationship)
+  permissions Permission[] @relation("UserPermissions")
+
+  /// Company the user belongs to (many-to-one relationship)
+  companyId Int?
+  company   Company? @relation(fields: [companyId], references: [id])
+}
+
+/// Company model represents a company in the system
+model Company {
+  id     Int    @id @default(autoincrement())
+  name   String
+  userId Int    @unique
+  users  User[]
+}
+
+/// Profile model represents the profile of a user
+model Profile {
+  id     Int    @id @default(autoincrement())
+  bio    String
+  userId Int    @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+/// Permission model represents a permission that can be assigned to a user
+model Permission {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  /// Users who have this permission (many-to-many relationship)
+  users User[] @relation("UserPermissions")
+}
+
+/// Sale model represents a sale made by a user
+model Sale {
+  id        Int     @id @default(autoincrement())
+  amount    Float
+  productId Int
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+/// Product model represents a product sold in the system
+model Product {
+  id    Int    @id @default(autoincrement())
+  name  String
+  price Float
+  sales Sale[]
+}
+
+/// Role enum represents the different roles a user can have
+enum Role {
+  WORKER
+  ADMIN
+  CLIENT
+  SUPPLIER
+}
